@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Movie">
+	<select id="mostFast" resultType="moviedto">
+		select * from movie m join moviedata md 
+		on m.movienum = md.movienum where  m.movienum =
+		(select movienum from movie order by movierelease desc limit ${i},1)
+	</select>
+	<select id="watched" parameterType="hashmap" resultType="moviedto">
+      select * from moviedata md join watched w
+      on md.movienum = w.movienum join movie m 
+      on md.movienum = m.movienum where userid=#{userid} 
+      group by md.movienum order by time desc limit ${i},1;
+   </select>
+	<select id="mostView" parameterType="_int" resultType="moviedto">
+		select * from moviedata md join movie m
+		on m.movienum = md.movienum where md.movienum =
+		(select movienum from movie order by view_cnt desc limit ${i},1)
+	</select>
+	<select id="mostLike" parameterType="_int" resultType="moviedto">
+		select * from moviedata md join movie_like ml on md.movienum = ml.movienum
+		join movie m on m.movienum = ml.movienum where md.movienum = 
+		(select movienum from movie_like group by movienum order by count(movienum) desc limit ${i},1)
+		group by md.movienum;
+	</select>
+	<select id="movieDetail" parameterType="_int" resultType="moviedto">
+		select * from movie m join moviedata md on m.movienum = md.movienum where m.movienum=#{movienum}
+	</select>
+   	<insert id="wishMovie" parameterType="hashmap">
+     	 insert into wishlist values(#{movienum},#{userid})
+   	</insert>
+	<insert id="likeMovie" parameterType="hashmap">
+		insert into movie_like values(#{movienum},#{userid})
+	</insert>
+	<select id="similarType" parameterType="_int" resultType="moviedto">
+		select * from movie m join moviedata md on m.movienum = md.movienum
+		where typename = (select typename from movie where movienum = #{movienum})
+	</select>
+	<select id="moviesearchtitle" parameterType="String" resultType="moviedto">
+		select *from movie m 
+		join moviedata md on m.movienum = md.movienum
+		where movietitle like #{search} or actorname like #{search} or typename like #{search};
+	</select>
+	<select id="getMovie" parameterType="_int" resultType="string">
+      	select moviefilm from moviedata where movienum=#{movienum}
+   	</select>
+   	<update id="plusView_cnt" parameterType="_int">
+   		update movie set view_cnt = view_cnt+1 where movienum=#{movienum}
+   	</update>
+   	<delete id="removeWish" parameterType="hashmap">
+   		delete from wishlist where movienum=#{movienum} and userid=#{userid}
+   	</delete>
+   	<delete id="removeLike"  parameterType="hashmap">
+   		delete from movie_like where movienum=#{movienum} and userid=#{userid}
+   	</delete>
+   	<delete id="removeWatched" parameterType="hashmap">
+   		delete from watched where movienum=#{movienum} and userid=#{userid}
+   	</delete>
+    <select id="checklike" parameterType="hashmap" resultType="_int">
+         select count(*) from movie_like where movienum=#{movienum} and userid=#{userid}
+   	</select>
+   	<select id="checkWish" parameterType="hashmap" resultType="_int">
+   		select count(*) from wishlist where movienum=#{movienum} and userid=#{userid}
+   	</select>
+    <insert id="fileUpLoad" parameterType="moviedto">
+        insert into movie (typename,actorname,movietitle,movierelease,runningtime,moviecontents,
+        movieended,national,agelimit) values(#{typename},#{actorname},#{movietitle},#{movierelease},#{runningtime}
+      ,#{moviecontents},#{movieended}, #{national}, #{agelimit})
+      </insert>
+    <insert id="plusWatched" parameterType="hashmap">
+    	insert into watched (movienum,userid) values(#{movienum},#{userid})
+    </insert>
+    <select id="wishlist" parameterType="string" resultType="moviedto">
+		      select * from movie m join wishlist w on m.movienum = w.movienum join moviedata md
+      on md.movienum = m.movienum where userid = #{userid};
+    </select>
+    <select id="getLastNum" resultType="_int">
+      select max(movienum) from movie
+   </select>
+   <insert id="insertMovie" parameterType="moviedto">
+      insert into movie(typename,actorname,movietitle,movierelease,movieended,national,agelimit) values(#{typename},#{actorname},#{movietitle},#{movierelease},#{movieended},#{national},#{agelimit})
+   </insert>
+   <insert id="insertfile" parameterType="moviedatadto">
+      insert into
+      moviedata(movienum,moviephoto,moviefilm) values(#{movienum},#{moviephoto},#{moviefilm})
+   </insert>
+</mapper>
